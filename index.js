@@ -50,7 +50,28 @@ async function run() {
       }
       const userInserted = await userCollection.insertOne(userData);
       res.send(userInserted);
-    })
+    });
+
+    // users get or show api
+    app.get("/users", async(req, res)=> {
+      
+      const usersData = await userCollection.find().toArray();
+      res.send(usersData);
+    });
+
+    // specific user make as a admin api
+    app.patch("/users/admin/:id", async(req, res)=> {
+      const id = req.params.id;
+      const query = {_id : new ObjectId(id)};
+
+      const updateAbleData = {
+        $set: {
+          'role': "admin"
+        }
+      }
+      const updatedData = await userCollection.updateOne(query, updateAbleData);
+      res.send(updatedData);
+    });
 
     // all menu get api
     app.get("/menu", async(req, res)=>{
