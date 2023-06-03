@@ -70,7 +70,7 @@ async function run() {
 
      // verifying admin
      const verifyAdmin = async (req, res, next) => {
-      const email = req.decoded.email;
+      const email = req.decoded.data.email;
       const query = { email: email }
       const user = await userCollection.findOne(query);
       if (user?.role !== 'admin') {
@@ -137,7 +137,7 @@ async function run() {
     });
 
     // menu data insert api
-    app.post("/menu", async(req, res)=> {
+    app.post("/menu",verifyUserToken, verifyAdmin, async(req, res)=> {
       const item = req.body;
       const inserted = await menuCollection.insertOne(item);
       res.send(inserted)
