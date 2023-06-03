@@ -69,15 +69,15 @@ async function run() {
     });
 
      // verifying admin
-    //  const verifyAdmin = async (req, res, next) => {
-    //   const email = req.decoded.email;
-    //   const query = { email: email }
-    //   const user = await userCollection.findOne(query);
-    //   if (user?.role !== 'admin') {
-    //     return res.status(403).send({ error: true, message: 'forbidden access' });
-    //   }
-    //   next();
-    // }
+     const verifyAdmin = async (req, res, next) => {
+      const email = req.decoded.email;
+      const query = { email: email }
+      const user = await userCollection.findOne(query);
+      if (user?.role !== 'admin') {
+        return res.status(403).send({ error: true, message: 'forbidden access' });
+      }
+      next();
+    }
 
 
     // user insert or post api
@@ -89,13 +89,14 @@ async function run() {
       if(matchedEmail){
         return res.send("Data already exists");
       }
+      
       const userInserted = await userCollection.insertOne(userData);
       res.send(userInserted);
     });
 
 
     // users get or show api
-    app.get("/users", async(req, res)=> {
+    app.get("/users",verifyUserToken, verifyAdmin, async(req, res)=> {
       
       const usersData = await userCollection.find().toArray();
       res.send(usersData);
