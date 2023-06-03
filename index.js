@@ -32,22 +32,40 @@ async function run() {
     await client.connect();
 
     const database = client.db("foodKitchen");
+
     const menuCollection = database.collection('menu');
     const reviewsCollection = database.collection('reviews');
     const cartCollection = database.collection('carts');
+    const userCollection = database.collection('users');
 
+
+    // user insert or post api
+    app.post("/users", async(req, res)=> {
+      const userData = req.body;
+      const query = {email: userData.email};
+      const matchedEmail = await userCollection.findOne(query);
+
+      if(matchedEmail){
+        return res.send("Data already exists");
+      }
+      const userInserted = await userCollection.insertOne(userData);
+      res.send(userInserted);
+    })
+
+    // all menu get api
     app.get("/menu", async(req, res)=>{
         const menuData = await menuCollection.find().toArray();
         res.send(menuData);
     });
 
+    // all reviews get api
     app.get("/reviews", async(req, res)=>{
         const reviewsData = await reviewsCollection.find().toArray();
         res.send(reviewsData);
     });
 
 
-    // cart data get api
+    // all cart data get api
     app.get("/carts", async(req,res)=> {
       const email = req.query.email;
       const query = { email: email };
@@ -56,15 +74,23 @@ async function run() {
       }else{
         const result = await cartCollection.find(query).toArray();
         res.send(result);
-      }
-      
+      }  
     });
 
+    // specific cart data delete api
+    app.delete("/carts/:id", async(req,res)=> {
+      const id = req.params.id;
+      const query = { _id : new ObjectId(id)};
 
-    // cart data insert api
+      const deleted = await cartCollection.deleteOne(query);
+      res.send(deleted);
+
+    })
+
+
+    // one cart data insert api
     app.post("/carts", async(req, res)=> {
       const data = req.body;
-      console.log(data)
       const result = await cartCollection.insertOne(data);
       res.send(result);
 
