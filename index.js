@@ -68,6 +68,18 @@ async function run() {
       res.send(token);
     });
 
+     // verifying admin
+    //  const verifyAdmin = async (req, res, next) => {
+    //   const email = req.decoded.email;
+    //   const query = { email: email }
+    //   const user = await userCollection.findOne(query);
+    //   if (user?.role !== 'admin') {
+    //     return res.status(403).send({ error: true, message: 'forbidden access' });
+    //   }
+    //   next();
+    // }
+
+
     // user insert or post api
     app.post("/users", async(req, res)=> {
       const userData = req.body;
@@ -80,6 +92,7 @@ async function run() {
       const userInserted = await userCollection.insertOne(userData);
       res.send(userInserted);
     });
+
 
     // users get or show api
     app.get("/users", async(req, res)=> {
@@ -101,6 +114,20 @@ async function run() {
       const updatedData = await userCollection.updateOne(query, updateAbleData);
       res.send(updatedData);
     });
+
+    // isAdmin or Not api implement for admin
+    app.get("/users/admin/:email",verifyUserToken, async(req, res)=> {
+      const email = req.params.email;
+      const query = {email: email};
+
+      if(req.decoded.data.email !== email){
+        return res.send({ admin: false });
+      }
+      
+      const user = await userCollection.findOne(query);
+      const userRole = {admin: user?.role === 'admin'};
+      res.send(userRole);
+    })
 
     // all menu get api
     app.get("/menu", async(req, res)=>{
