@@ -89,7 +89,7 @@ async function run() {
       if(matchedEmail){
         return res.send("Data already exists");
       }
-      
+
       const userInserted = await userCollection.insertOne(userData);
       res.send(userInserted);
     });
@@ -135,6 +135,13 @@ async function run() {
         const menuData = await menuCollection.find().toArray();
         res.send(menuData);
     });
+
+    // menu data insert api
+    app.post("/menu", async(req, res)=> {
+      const item = req.body;
+      const inserted = await menuCollection.insertOne(item);
+      res.send(inserted)
+    })
 
     // all reviews get api
     app.get("/reviews", async(req, res)=>{
