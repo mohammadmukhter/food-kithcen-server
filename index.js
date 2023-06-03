@@ -4,9 +4,30 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 5000;
+var jwt = require('jsonwebtoken');
 
+
+// all the middleware 
 app.use(cors());
 app.use(express.json());
+
+const verifyUserToken = (req, res, next)=> {
+  const authorization = req.headers.authorization;
+  if(!authorization){
+    return res.status(401).send({error: true, message: 'unauthorized access'});
+  }
+
+  const token = authorization.split(' ')[1];
+  
+  jwt.verify(token, process.env.USER_ACCESS_TOKEN, (err, decoded)=>{
+    if(err){
+      return res.status(403).send({error: true, message: 'unauthorized access'});
+    }
+    req.decoded = decoded;
+    next()
+  });
+
+}
 
 app.get("/", (req, res)=> {
     res.status(200).send('server initially started');
@@ -38,6 +59,14 @@ async function run() {
     const cartCollection = database.collection('carts');
     const userCollection = database.collection('users');
 
+    // jwt token generator api
+    app.post("/jwt", (req,res)=>{
+      const userPayLoad = req.body;
+      const token = jwt.sign({
+        data: userPayLoad
+      }, process.env.USER_ACCESS_TOKEN, { expiresIn: '1hr' });
+      res.send(token);
+    });
 
     // user insert or post api
     app.post("/users", async(req, res)=> {
@@ -87,15 +116,23 @@ async function run() {
 
 
     // all cart data get api
-    app.get("/carts", async(req,res)=> {
+    app.get("/carts", verifyUserToken,  async(req,res)=> {
       const email = req.query.email;
       const query = { email: email };
+
       if(!email){
-        res.send([]);
-      }else{
-        const result = await cartCollection.find(query).toArray();
-        res.send(result);
-      }  
+        return res.send([]);
+      }
+
+      const decodedEmail = req.decoded.data.email;
+      if (email !== decodedEmail) {
+        return res.status(403).send({ error: true, message: 'porviden access' })
+      }
+      // console.log('email:', email)
+      // console.log(req.decoded.data.email)
+      const result = await cartCollection.find(query).toArray();
+      res.send(result);
+ 
     });
 
     // specific cart data delete api
