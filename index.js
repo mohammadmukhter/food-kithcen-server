@@ -128,7 +128,7 @@ async function run() {
       
       const user = await userCollection.findOne(query);
       const userRole = {admin: user?.role === 'admin'};
-      console.log(userRole)
+      // console.log(userRole)
       res.send(userRole);
     })
 
@@ -143,6 +143,16 @@ async function run() {
       const item = req.body;
       const inserted = await menuCollection.insertOne(item);
       res.send(inserted)
+    });
+
+    // specific menu item delete api
+    app.delete("/menu/:id",verifyUserToken, verifyAdmin, async(req, res)=> {
+      const id = req.params.id;
+      const query = {_id : new ObjectId(id)};
+
+      const deletedData = await menuCollection.deleteOne(query);
+      res.send(deletedData)
+
     })
 
     // all reviews get api
